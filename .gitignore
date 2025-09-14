@@ -9,6 +9,7 @@ coverage/
 .env
 .env.*
 !.env.example
+.comandos.md
 
 # editor/OS
 .DS_Store
