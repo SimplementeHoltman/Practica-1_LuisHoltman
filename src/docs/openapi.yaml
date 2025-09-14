@@ -1,0 +1,540 @@
+openapi: 3.0.3
+info:
+  title: Practica 1 – Express API
+  version: "1.0.0"
+  description: |
+    API para usuarios, sesión, blogs, mensajes y seguimientos.
+    Implementada con Node.js, Express y PostgreSQL.
+  contact:
+    name: Luis Holtman
+    email: luis.holtman@protonmail.com
+servers:
+  - url: http://localhost:3000
+    description: Local
+
+tags:
+  - name: Usuarios
+  - name: Sesión
+  - name: Blogs
+  - name: Mensajes
+  - name: Seguimientos
+
+paths:
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Usuario"
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioCreate"
+            examples:
+              ejemplo:
+                value:
+                  correo: "ana@example.com"
+                  contrasena: "Secreta123"
+                  nombre: "Ana"
+                  apellido: "López"
+                  fecha_nacimiento: "2001-05-20"
+                  telefono: "50255551234"
+                  descripcion: "Me gusta programar"
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /usuarios/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario por ID
+      responses:
+        "200":
+          description: Usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "500":
+          $ref: "#/components/responses/Error500"
+    delete:
+      tags: [Usuarios]
+      summary: Eliminar usuario por ID
+      responses:
+        "200":
+          description: Eliminación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsuarioDeleteOk"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /sesion:
+    post:
+      tags: [Sesión]
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              ejemplo:
+                value: { correo: "ana@example.com", contrasena: "Secreta123" }
+      responses:
+        "200":
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                ejemplo: { value: { error: "Credenciales inválidas" } }
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /blogs:
+    get:
+      tags: [Blogs]
+      summary: Listar blogs (con autor)
+      responses:
+        "200":
+          description: Lista de blogs con datos del autor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlogListado"
+        "500":
+          $ref: "#/components/responses/Error500"
+    post:
+      tags: [Blogs]
+      summary: Crear blog para un usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogCreate"
+            examples:
+              ejemplo:
+                value: { usuario_id: 1 }
+      responses:
+        "201":
+          description: Blog creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Blog"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /blogs/{id_blog}:
+    parameters:
+      - in: path
+        name: id_blog
+        required: true
+        schema: { type: integer, format: int64 }
+    delete:
+      tags: [Blogs]
+      summary: Eliminar blog por ID
+      responses:
+        "200":
+          description: Eliminación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOk"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /mensajes/{id_mensaje}:
+    parameters:
+      - in: path
+        name: id_mensaje
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Mensajes]
+      summary: Obtener mensaje por ID (con autor y blog)
+      responses:
+        "200":
+          description: Mensaje
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MensajeDetalle"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "500":
+          $ref: "#/components/responses/Error500"
+    delete:
+      tags: [Mensajes]
+      summary: Eliminar mensaje por ID
+      responses:
+        "200":
+          description: Eliminación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOk"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /mensajes/buscar/{query}:
+    parameters:
+      - in: path
+        name: query
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Mensajes]
+      summary: Buscar mensajes por coincidencia de texto
+      responses:
+        "200":
+          description: Resultados de búsqueda
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MensajeBusqueda"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /mensajes/usuario/{usuario_id}:
+    parameters:
+      - in: path
+        name: usuario_id
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Mensajes]
+      summary: Últimos 10 mensajes de un usuario
+      responses:
+        "200":
+          description: Mensajes (máximo 10, más recientes primero)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MensajeUsuario"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /mensajes:
+    post:
+      tags: [Mensajes]
+      summary: Crear mensaje
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MensajeCreate"
+            examples:
+              ejemplo:
+                value: { usuario_id: 1, blog_id: 5, contenido: "Hola mundo" }
+      responses:
+        "201":
+          description: Mensaje creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensaje"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /seguimientos:
+    get:
+      tags: [Seguimientos]
+      summary: Listar relaciones de seguimiento (nombres)
+      responses:
+        "200":
+          description: Pares seguidor–seguido
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeguimientoVista"
+        "500":
+          $ref: "#/components/responses/Error500"
+    post:
+      tags: [Seguimientos]
+      summary: Crear seguimiento (seguir a un usuario)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeguimientoCreate"
+            examples:
+              ejemplo:
+                value: { id_seguidor: 1, id_seguido: 2 }
+      responses:
+        "201":
+          description: Seguimiento creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Seguimiento"
+        "500":
+          $ref: "#/components/responses/Error500"
+    delete:
+      tags: [Seguimientos]
+      summary: Eliminar seguimiento (dejar de seguir)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeguimientoDelete"
+            examples:
+              ejemplo:
+                value: { id_seguidor: 1, id_seguido: 2 }
+      responses:
+        "200":
+          description: Eliminación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOk"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+  /seguimientos/mensajes/{id_seguidor}:
+    parameters:
+      - in: path
+        name: id_seguidor
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Seguimientos]
+      summary: Mensajes de los usuarios seguidos por un usuario
+      responses:
+        "200":
+          description: Mensajes de seguidos (más recientes primero)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MensajeUsuario"
+        "500":
+          $ref: "#/components/responses/Error500"
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+
+    DeleteOk:
+      type: object
+      properties:
+        ok: { type: string, example: "true" }
+      required: [ok]
+
+    UsuarioDeleteOk:
+      type: object
+      properties:
+        exitoso: { type: string, example: "usuario eliminado con exito" }
+      required: [exitoso]
+
+    Usuario:
+      type: object
+      properties:
+        id_usuario: { type: integer, format: int64 }
+        correo: { type: string, format: email }
+        contrasena: { type: string }
+        nombre: { type: string }
+        apellido: { type: string }
+        fecha_nacimiento: { type: string, format: date }
+        telefono: { type: string }
+        descripcion: { type: string }
+      additionalProperties: true
+
+    UsuarioCreate:
+      type: object
+      required: [correo, contrasena, nombre, apellido, fecha_nacimiento]
+      properties:
+        correo: { type: string, format: email }
+        contrasena: { type: string }
+        nombre: { type: string }
+        apellido: { type: string }
+        fecha_nacimiento: { type: string, format: date }
+        telefono: { type: string }
+        descripcion: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [correo, contrasena]
+      properties:
+        correo: { type: string, format: email }
+        contrasena: { type: string }
+
+    LoginResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Inicio de sesión exitoso" }
+        usuario:
+          $ref: "#/components/schemas/Usuario"
+      required: [message, usuario]
+
+    Blog:
+      type: object
+      properties:
+        id_blog: { type: integer, format: int64 }
+        usuario_id: { type: integer, format: int64 }
+      additionalProperties: true
+
+    BlogCreate:
+      type: object
+      required: [usuario_id]
+      properties:
+        usuario_id: { type: integer, format: int64 }
+
+    BlogListado:
+      type: object
+      properties:
+        id_blog: { type: integer, format: int64 }
+        usuario_id: { type: integer, format: int64 }
+        nombre: { type: string, description: "Nombre del autor" }
+        apellido: { type: string, description: "Apellido del autor" }
+      additionalProperties: true
+
+    Mensaje:
+      type: object
+      properties:
+        id_mensaje: { type: integer, format: int64 }
+        usuario_id: { type: integer, format: int64 }
+        blog_id: { type: integer, format: int64 }
+        contenido: { type: string }
+        fecha_publicacion: { type: string, format: date-time }
+      additionalProperties: true
+
+    MensajeCreate:
+      type: object
+      required: [usuario_id, blog_id, contenido]
+      properties:
+        usuario_id: { type: integer, format: int64 }
+        blog_id: { type: integer, format: int64 }
+        contenido: { type: string }
+
+    MensajeBusqueda:
+      type: object
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        id_blog: { type: integer, format: int64 }
+        contenido: { type: string }
+
+    MensajeUsuario:
+      type: object
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        id_blog: { type: integer, format: int64 }
+        contenido: { type: string }
+        fecha_publicacion: { type: string, format: date-time }
+
+    MensajeDetalle:
+      type: object
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        id_blog: { type: integer, format: int64 }
+        contenido: { type: string }
+
+    Seguimiento:
+      type: object
+      properties:
+        id_seguidor: { type: integer, format: int64 }
+        id_seguido: { type: integer, format: int64 }
+      additionalProperties: true
+
+    SeguimientoCreate:
+      type: object
+      required: [id_seguidor, id_seguido]
+      properties:
+        id_seguidor: { type: integer, format: int64 }
+        id_seguido: { type: integer, format: int64 }
+
+    SeguimientoDelete:
+      type: object
+      required: [id_seguidor, id_seguido]
+      properties:
+        id_seguidor: { type: integer, format: int64 }
+        id_seguido: { type: integer, format: int64 }
+
+    SeguimientoVista:
+      type: object
+      properties:
+        seguidor_nombre: { type: string }
+        seguidor_apellido: { type: string }
+        seguido_nombre: { type: string }
+        seguido_apellido: { type: string }
+
+  responses:
+    Error404:
+      description: No encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            ejemplo: { value: { error: "Recurso no encontrado" } }
+    Error500:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            ejemplo: { value: { error: "Error interno" } }

@@ -7,6 +7,17 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+
+// Si tu server vive en src/index.js y el YAML está en src/docs/openapi.yaml:
+const swaggerPath = path.join(__dirname, 'docs/openapi.yaml');
+const swaggerDoc = YAML.load(swaggerPath);
+
+console.log('Swagger file:', swaggerPath); // debug
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc, { explorer: true }));
+
 
 // Rutas
 const usuariosRouter = require('./routes/usuarios');
