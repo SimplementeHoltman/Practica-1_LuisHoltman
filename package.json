@@ -1,0 +1,17 @@
+{
+  "name": "practica1_luisholtman",
+  "version": "1.0.0",
+  "description": "Node.js/Express + PostgreSQL en Docker, importando SQL del PDF",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node -e \"console.log('OK')\""
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pg": "^8.12.0"
+  }
+}
