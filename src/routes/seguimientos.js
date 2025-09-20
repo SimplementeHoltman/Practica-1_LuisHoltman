@@ -46,6 +46,9 @@ router.get("/mensajes/:id_seguidor", async (req, res) => {
 // POST para crear un nuevo seguimiento 
 router.post("/", async (req, res) => {
     const { id_seguidor, id_seguido } = req.body;
+    if (id_seguidor === id_seguido) {
+        return res.status(400).json({ error: "Un usuario no puede seguirse a sí mismo" });
+    }
     try {
         const { rows } = await pool.query(
             `INSERT INTO seguimiento (id_seguidor, id_seguido)
